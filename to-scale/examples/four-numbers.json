@@ -1,0 +1,82 @@
+{
+  "title": "四个数字，按真实比例",
+  "kicker": "比例尺 · to-scale",
+  "lede": "数字一大，人就没感觉了。下面四个数字全部按真实比例画出来：往下滚，用手指去量。",
+  "tone": "tape",
+  "scenes": [
+    {
+      "type": "ticker",
+      "tone": "ink",
+      "kicker": "实时",
+      "title": "你打开这一页以后，全国已经寄出了",
+      "rate": 6308.6,
+      "unit": "件",
+      "suffix": "件快递",
+      "note": "按国家邮政局公布的 2025 年全国快递业务量 1989.5 亿件，平均到全年每一秒，约 6,309 件。"
+    },
+    {
+      "type": "stack",
+      "tone": "paper",
+      "title": "一个小目标，摞起来有多高",
+      "lede": "1 亿元，全部换成百元钞票，一张一张往上摞。旁边站着一栋楼和一个人，用的是同一把尺。",
+      "unit": "米",
+      "per": 0.05,
+      "contract": "1 像素 = 5 厘米",
+      "items": [
+        {"name": "一个小目标", "value": 100, "color": "#E4412B", "every": 1, "note": "100 万张百元钞 × 每张约 0.1 毫米"},
+        {"name": "33 层住宅楼", "value": 99, "color": "#3A3D45", "every": 3, "note": "按每层 3 米"},
+        {"name": "一个成年人", "value": 1.7, "color": "#121316", "note": "1.7 米"}
+      ],
+      "punch": "一万元现金大约 1 厘米厚。\n在这张图里，\n它只有五分之一个像素。"
+    },
+    {
+      "type": "dots",
+      "tone": "paper",
+      "title": "AI 读过的书，和你一辈子读的书",
+      "lede": "把 Llama 3 预训练读过的文本折算成书，和一个非常爱读书的人比一比。小红点在最左上角。",
+      "per": 1000,
+      "unitName": "本书",
+      "groups": [
+        {"label": "你一辈子读的书", "value": 3120, "color": "#E4412B", "note": "假设每周读 1 本，从 10 岁读到 70 岁"},
+        {"label": "Llama 3 预训练读过的文本", "value": 112500000, "note": "15 万亿 token × 每个 token 约 0.75 个英文词 ÷ 每本书 10 万词，粗略估算"}
+      ],
+      "punch": "你需要读大约 3.6 万辈子，才赶得上它。"
+    },
+    {
+      "type": "ruler",
+      "tone": "night",
+      "title": "从地球滚到月球",
+      "lede": "地球、月球的大小，和它们之间的距离，用的是同一把尺。往下滚，这就是 38 万公里。",
+      "unit": "公里",
+      "per": 50,
+      "length": 384400,
+      "readout": "距地心",
+      "from": {"name": "地球", "size": 12742, "color": "#2F67D8"},
+      "to": {"name": "月球", "size": 3474, "color": "#B9B8B2"},
+      "marks": [
+        {"alt": 400, "text": "国际空间站", "sub": "离地约 400 公里"},
+        {"alt": 20200, "text": "GPS 卫星", "sub": "离地约 20,200 公里"},
+        {"alt": 35786, "text": "地球同步轨道", "sub": "离地 35,786 公里"},
+        {"at": 192200, "text": "走了一半", "sub": "192,200 公里"}
+      ],
+      "quips": [
+        {"at": 80000, "text": "地球的直径，只占这段路的 3%。"},
+        {"at": 135000, "text": "这里什么都没有。"},
+        {"at": 245000, "text": "还是什么都没有。太空的大部分地方就是这样。"},
+        {"at": 330000, "text": "把太阳系其余 7 颗行星排成一排，刚好塞得进地月之间。"}
+      ],
+      "punch": "光走完这段路只要 1.3 秒。\n你刚才滚了多久？"
+    }
+  ],
+  "ending": {
+    "kicker": "比例尺 · to-scale",
+    "big": "下一个数字，\n你来定。",
+    "text": "装上「比例尺」skill，跟 Claude 说「把 ×× 按比例画出来」。它会查数据、挑参照物、算好比例，写清来源，生成这样一页。"
+  },
+  "sources": [
+    {"label": "国家邮政局：2025 年全国快递业务量完成 1989.5 亿件（中国日报网）", "url": "https://caijing.chinadaily.com.cn/a/202601/23/WS69732022a310942cc499c86d.html"},
+    {"label": "Meta：Llama 3 预训练数据超过 15 万亿 token（The Register）", "url": "https://www.theregister.com/2024/04/19/meta_debuts_llama3_llm/"},
+    {"label": "NASA StarChild：月球直径 3,474 公里，地月距离 384,400 公里", "url": "https://starchild.gsfc.nasa.gov/docs/StarChild/solar_system_level1/earth_satellites.html", "note": "地球平均半径 6,371 公里；空间站、GPS、同步轨道高度为常用近似值"},
+    {"label": "百元钞厚度约 0.1 毫米、读书量、token 与词的换算均为估算，假设已在各场景中注明"}
+  ]
+}

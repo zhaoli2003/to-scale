@@ -1,0 +1,577 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>四个数字，按真实比例</title>
+<!-- TS:FRAGMENT-START -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;700;900&family=Archivo:wdth,wght@62..125,400..900&family=DM+Mono:wght@400;500&display=swap">
+<style>
+/* 比例尺 to-scale 渲染引擎 · 卷尺黄 + 墨黑 · 签名：卷尺刻度条 */
+:root{
+  --tape:#FFCE1F; --ink:#121316; --paper:#F0EFEA; --red:#E4412B; --night:#06080C;
+  --f-zh:"Noto Sans SC","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  --f-num:"Archivo","Noto Sans SC","PingFang SC",sans-serif;
+  --f-mono:"DM Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--f-zh);line-height:1.7;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:20;background:var(--ink)}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--red);outline-offset:3px}
+
+.tone-paper{--bg:#F0EFEA;--fg:#121316;--mu:#5C5E66;--line:#C6C5BE;--hi:#E4412B;--on-hi:#FFFFFF}
+.tone-night{--bg:#06080C;--fg:#E7E9EE;--mu:#8A92A3;--line:#2A303B;--hi:#FFCE1F;--on-hi:#06080C}
+.tone-tape{--bg:#FFCE1F;--fg:#121316;--mu:#4F4100;--line:rgba(18,19,22,.3);--hi:#121316;--on-hi:#FFCE1F}
+.tone-ink{--bg:#121316;--fg:#F0EFEA;--mu:#9597A0;--line:#2E3036;--hi:#FFCE1F;--on-hi:#121316}
+.ts-sec{background:var(--bg);color:var(--fg);position:relative}
+.in{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* 签名：卷尺刻度条 */
+.tape{height:20px;opacity:.6;background:
+  repeating-linear-gradient(90deg,var(--fg) 0 1px,transparent 1px 10px) left bottom/100% 7px no-repeat,
+  repeating-linear-gradient(90deg,var(--fg) 0 2px,transparent 2px 50px) left bottom/100% 15px no-repeat}
+
+/* 开头 */
+.ts-intro .in{padding-block:clamp(40px,8vw,96px) clamp(32px,6vw,64px)}
+.kicker{font-family:var(--f-mono);font-size:13px;letter-spacing:.06em;margin:0 0 18px;display:flex;gap:10px;align-items:center}
+.kicker::before{content:"";width:30px;height:10px;flex-shrink:0;background:repeating-linear-gradient(90deg,currentColor 0 1px,transparent 1px 5px)}
+.ts-intro h1{white-space:pre-line;font-weight:900;font-size:clamp(40px,8vw,100px);line-height:1.05;margin:0;letter-spacing:-.01em;text-wrap:balance;max-width:13em}
+.lede{font-size:clamp(16px,1.9vw,20px);max-width:32em;margin:22px 0 0;text-wrap:pretty}
+.toc{display:flex;flex-wrap:wrap;gap:8px;margin:30px 0 0;padding:0;list-style:none}
+.toc a{display:inline-flex;gap:8px;align-items:baseline;text-decoration:none;border:2px solid var(--fg);padding:6px 12px;font-size:14px;font-weight:700}
+.toc a span{font-family:var(--f-mono);font-weight:400;font-size:12px}
+.toc a:hover{background:var(--fg);color:var(--bg)}
+
+/* 场景标题 */
+.sc-head{padding-block:clamp(52px,8vw,96px) 26px}
+.sc-no{font-family:var(--f-mono);font-size:13px;color:var(--mu);margin:0 0 12px;letter-spacing:.04em}
+.sc-head h2{white-space:pre-line;margin:0;font-weight:900;font-size:clamp(30px,5.2vw,58px);line-height:1.14;text-wrap:balance;max-width:16em}
+.sc-lede{margin:14px 0 0;max-width:34em;font-size:clamp(15px,1.6vw,18px);text-wrap:pretty}
+.contract{display:inline-block;margin:20px 0 0;font-family:var(--f-mono);font-size:14px;background:var(--hi);color:var(--on-hi);padding:5px 12px}
+.punch{padding-block:36px clamp(56px,9vw,100px)}
+.punch p{white-space:pre-line;margin:0;max-width:22em;font-weight:900;font-size:clamp(22px,3.4vw,36px);line-height:1.35;text-wrap:balance}
+
+/* 读数条 */
+.hud{position:sticky;top:env(safe-area-inset-top,0px);z-index:6;background:color-mix(in srgb,var(--bg) 90%,transparent);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border-block:1px solid var(--line)}
+.hud .in{display:flex;align-items:center;gap:8px 16px;padding-block:10px;flex-wrap:wrap}
+.hud-read{display:flex;align-items:baseline;gap:8px;min-width:0}
+.hud-lab{font-size:13px;color:var(--mu);white-space:nowrap}
+.hud-val{font-family:var(--f-num);font-weight:800;font-stretch:78%;font-size:clamp(24px,3.4vw,34px);font-variant-numeric:tabular-nums;line-height:1;white-space:nowrap}
+.hud-unit{font-size:14px;font-weight:700;white-space:nowrap}
+.hud-sub{font-family:var(--f-mono);font-size:12px;color:var(--mu);white-space:nowrap}
+.hud-bar{flex:1 1 100px;height:6px;background:var(--line);position:relative;min-width:60px}
+.hud-bar i{position:absolute;inset:0 auto 0 0;width:0;background:var(--hi)}
+.hud-btns{display:flex;gap:6px}
+.hud button{font:inherit;font-size:13px;border:1px solid var(--fg);background:transparent;color:var(--fg);padding:4px 10px;cursor:pointer;white-space:nowrap}
+.hud button:hover{background:var(--fg);color:var(--bg)}
+
+/* 标尺 ruler */
+.rl{position:relative;overflow:hidden}
+.tone-night .rl{background-image:
+  radial-gradient(1px 1px at 23px 41px,rgba(255,255,255,.6),transparent 70%),
+  radial-gradient(1px 1px at 141px 97px,rgba(255,255,255,.35),transparent 70%),
+  radial-gradient(1.5px 1.5px at 87px 173px,rgba(255,255,255,.5),transparent 70%),
+  radial-gradient(1px 1px at 199px 13px,rgba(255,255,255,.3),transparent 70%),
+  radial-gradient(1px 1px at 61px 211px,rgba(255,255,255,.25),transparent 70%);background-size:230px 230px}
+.rl-axis{position:absolute;left:50%;width:2px;margin-left:-1px;background:repeating-linear-gradient(to bottom,var(--line) 0 6px,transparent 6px 12px)}
+.rl-body{position:absolute;left:50%;border-radius:50%;transform:translateX(-50%)}
+.rl-name{position:absolute;left:50%;transform:translateX(-50%);text-align:center;white-space:nowrap;font-weight:900;font-size:clamp(18px,2.4vw,26px);line-height:1.25}
+.rl-name.above{transform:translate(-50%,-100%)}
+.rl-name small{display:block;font-family:var(--f-mono);font-weight:400;font-size:12px;color:var(--mu)}
+.rl-mark{position:absolute;left:50%;display:flex;align-items:center;gap:8px;transform:translateY(-50%);max-width:calc(50% - 8px)}
+.rl-mark::before{content:"";width:18px;height:2px;background:var(--hi);flex-shrink:0}
+.rl-mark span{font-size:14px;line-height:1.45;font-weight:700}
+.rl-mark b{display:block;font-family:var(--f-mono);font-weight:400;font-size:12px;color:var(--mu)}
+.rl-tick{position:absolute;right:50%;transform:translateY(-50%);display:flex;align-items:center;gap:6px;font-family:var(--f-mono);font-size:11px;color:var(--mu);white-space:nowrap}
+.rl-tick::after{content:"";width:10px;height:1px;background:var(--mu)}
+.rl-quip{position:absolute;left:50%;transform:translate(-50%,-50%);width:max-content;max-width:min(22em,88%);text-align:center;font-size:clamp(15px,1.7vw,18px);background:var(--bg);padding:10px 14px;border:1px solid var(--line);text-wrap:balance}
+
+/* 堆叠 stack */
+.st-area{position:relative}
+.st-tick{position:absolute;left:0;right:0;border-top:1px dashed var(--line)}
+.st-tick span{position:absolute;left:0;top:-9px;background:var(--bg);padding-right:6px;font-family:var(--f-mono);font-size:11px;color:var(--mu);line-height:1.5}
+.st-bars{position:absolute;left:62px;right:0;top:0;bottom:0;display:flex;gap:clamp(8px,2vw,28px)}
+.st-col{position:relative;flex:1 1 0;min-width:0;display:flex;justify-content:center;align-items:flex-end}
+.st-bar{width:min(100%,128px);position:relative}
+.st-cap{position:absolute;left:0;right:0;text-align:center;font-size:13px;line-height:1.35}
+.st-cap b{display:block;font-size:clamp(14px,1.7vw,18px);font-weight:900}
+.st-cap i{display:block;font-style:normal;font-family:var(--f-num);font-weight:800;font-stretch:80%;font-size:clamp(20px,2.6vw,28px);font-variant-numeric:tabular-nums}
+.st-cap small{display:block;color:var(--mu);font-size:12px}
+.st-ground{height:3px;background:var(--fg);margin-left:62px}
+
+/* 点阵 dots */
+.dt-legend{display:grid;gap:12px;margin:0 0 44px;padding:0;list-style:none;max-width:44em}
+.dt-legend li{display:grid;grid-template-columns:14px minmax(0,1fr);gap:12px;align-items:start}
+.dt-legend i{width:14px;height:14px;margin-top:6px}
+.dt-legend b{font-weight:900}
+.dt-legend em{font-style:normal;font-family:var(--f-mono);font-size:13px;margin-left:6px}
+.dt-legend small{display:block;color:var(--mu);font-size:13px}
+.dt-grid{position:relative;padding-bottom:8px}
+.dt-grid canvas{display:block}
+.dt-call{position:absolute;left:0;top:-6px;transform:translateY(-100%);font-size:14px;font-weight:700;color:var(--hi);white-space:nowrap;z-index:3}
+.dt-ring{position:absolute;border:2px solid var(--hi);border-radius:999px;pointer-events:none;z-index:2;box-shadow:0 0 0 3px var(--bg);animation:ring 1.8s ease-in-out infinite}
+@keyframes ring{50%{scale:1.25}}
+
+/* 计数器 ticker */
+.tk{padding-block:clamp(56px,10vw,120px)}
+.tk-pre{font-size:clamp(20px,2.8vw,30px);font-weight:900;margin:0;max-width:20em;text-wrap:balance}
+.tk-num{font-family:var(--f-num);font-weight:800;font-stretch:72%;font-variant-numeric:tabular-nums;font-size:clamp(64px,15vw,190px);line-height:.95;margin:14px 0 6px;color:var(--hi);overflow-wrap:anywhere}
+.tk-suf{font-size:clamp(20px,2.8vw,30px);font-weight:900;margin:0}
+.tk-meta{font-family:var(--f-mono);font-size:13px;color:var(--mu);margin:18px 0 0}
+
+/* 结尾 */
+.ts-end .in{padding-block:clamp(56px,9vw,110px);display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:clamp(28px,6vw,72px);align-items:start}
+.end-card{aspect-ratio:3/4;background:var(--tape);color:var(--ink);padding:28px 26px 22px;display:flex;flex-direction:column;gap:16px;max-width:100%}
+.end-card .kicker{margin:0}
+.end-big{white-space:pre-line;margin:auto 0 0;font-weight:900;font-size:clamp(28px,4.4vw,42px);line-height:1.2;text-wrap:balance}
+.end-text{margin:0;font-size:15px;text-wrap:pretty}
+.end-card .tape{--fg:#121316;opacity:.8}
+.src h3{margin:0 0 12px;font-size:16px;font-weight:900}
+.src ol{margin:0;padding-left:1.3em;display:grid;gap:10px;font-size:14px}
+.src li small{display:block;color:var(--mu)}
+.src a{text-underline-offset:3px;overflow-wrap:anywhere}
+.credit{margin:28px 0 0;font-family:var(--f-mono);font-size:12px;color:var(--mu)}
+.ts-err{background:#E4412B;color:#fff;font-family:var(--f-mono);font-size:13px;white-space:pre-wrap;padding:16px max(16px,env(safe-area-inset-left,0px))}
+
+@media (max-width:700px){
+  .ts-end .in{grid-template-columns:1fr}
+  .hud-btns{width:100%}
+  .hud .in{gap:6px 12px}
+  .st-bars{left:44px}.st-ground{margin-left:44px}
+}
+@media (prefers-reduced-motion: reduce){html{scroll-behavior:auto}.dt-ring{animation:none}}
+</style>
+<!-- TS:FRAGMENT-BODY -->
+<div id="ts-root"></div>
+<script>
+/* === TOSCALE CONFIG START === */
+window.TOSCALE = {
+  "title": "四个数字，按真实比例",
+  "kicker": "比例尺 · to-scale",
+  "lede": "数字一大，人就没感觉了。下面四个数字全部按真实比例画出来：往下滚，用手指去量。",
+  "tone": "tape",
+  "scenes": [
+    {
+      "type": "ticker",
+      "tone": "ink",
+      "kicker": "实时",
+      "title": "你打开这一页以后，全国已经寄出了",
+      "rate": 6308.6,
+      "unit": "件",
+      "suffix": "件快递",
+      "note": "按国家邮政局公布的 2025 年全国快递业务量 1989.5 亿件，平均到全年每一秒，约 6,309 件。"
+    },
+    {
+      "type": "stack",
+      "tone": "paper",
+      "title": "一个小目标，摞起来有多高",
+      "lede": "1 亿元，全部换成百元钞票，一张一张往上摞。旁边站着一栋楼和一个人，用的是同一把尺。",
+      "unit": "米",
+      "per": 0.05,
+      "contract": "1 像素 = 5 厘米",
+      "items": [
+        {
+          "name": "一个小目标",
+          "value": 100,
+          "color": "#E4412B",
+          "every": 1,
+          "note": "100 万张百元钞 × 每张约 0.1 毫米"
+        },
+        {
+          "name": "33 层住宅楼",
+          "value": 99,
+          "color": "#3A3D45",
+          "every": 3,
+          "note": "按每层 3 米"
+        },
+        {
+          "name": "一个成年人",
+          "value": 1.7,
+          "color": "#121316",
+          "note": "1.7 米"
+        }
+      ],
+      "punch": "一万元现金大约 1 厘米厚。\n在这张图里，\n它只有五分之一个像素。"
+    },
+    {
+      "type": "dots",
+      "tone": "paper",
+      "title": "AI 读过的书，和你一辈子读的书",
+      "lede": "把 Llama 3 预训练读过的文本折算成书，和一个非常爱读书的人比一比。小红点在最左上角。",
+      "per": 1000,
+      "unitName": "本书",
+      "groups": [
+        {
+          "label": "你一辈子读的书",
+          "value": 3120,
+          "color": "#E4412B",
+          "note": "假设每周读 1 本，从 10 岁读到 70 岁"
+        },
+        {
+          "label": "Llama 3 预训练读过的文本",
+          "value": 112500000,
+          "note": "15 万亿 token × 每个 token 约 0.75 个英文词 ÷ 每本书 10 万词，粗略估算"
+        }
+      ],
+      "punch": "你需要读大约 3.6 万辈子，才赶得上它。"
+    },
+    {
+      "type": "ruler",
+      "tone": "night",
+      "title": "从地球滚到月球",
+      "lede": "地球、月球的大小，和它们之间的距离，用的是同一把尺。往下滚，这就是 38 万公里。",
+      "unit": "公里",
+      "per": 50,
+      "length": 384400,
+      "readout": "距地心",
+      "from": {
+        "name": "地球",
+        "size": 12742,
+        "color": "#2F67D8"
+      },
+      "to": {
+        "name": "月球",
+        "size": 3474,
+        "color": "#B9B8B2"
+      },
+      "marks": [
+        {
+          "alt": 400,
+          "text": "国际空间站",
+          "sub": "离地约 400 公里"
+        },
+        {
+          "alt": 20200,
+          "text": "GPS 卫星",
+          "sub": "离地约 20,200 公里"
+        },
+        {
+          "alt": 35786,
+          "text": "地球同步轨道",
+          "sub": "离地 35,786 公里"
+        },
+        {
+          "at": 192200,
+          "text": "走了一半",
+          "sub": "192,200 公里"
+        }
+      ],
+      "quips": [
+        {
+          "at": 80000,
+          "text": "地球的直径，只占这段路的 3%。"
+        },
+        {
+          "at": 135000,
+          "text": "这里什么都没有。"
+        },
+        {
+          "at": 245000,
+          "text": "还是什么都没有。太空的大部分地方就是这样。"
+        },
+        {
+          "at": 330000,
+          "text": "把太阳系其余 7 颗行星排成一排，刚好塞得进地月之间。"
+        }
+      ],
+      "punch": "光走完这段路只要 1.3 秒。\n你刚才滚了多久？"
+    }
+  ],
+  "ending": {
+    "kicker": "比例尺 · to-scale",
+    "big": "下一个数字，\n你来定。",
+    "text": "装上「比例尺」skill，跟 Claude 说「把 ×× 按比例画出来」。它会查数据、挑参照物、算好比例，写清来源，生成这样一页。"
+  },
+  "sources": [
+    {
+      "label": "国家邮政局：2025 年全国快递业务量完成 1989.5 亿件（中国日报网）",
+      "url": "https://caijing.chinadaily.com.cn/a/202601/23/WS69732022a310942cc499c86d.html"
+    },
+    {
+      "label": "Meta：Llama 3 预训练数据超过 15 万亿 token（The Register）",
+      "url": "https://www.theregister.com/2024/04/19/meta_debuts_llama3_llm/"
+    },
+    {
+      "label": "NASA StarChild：月球直径 3,474 公里，地月距离 384,400 公里",
+      "url": "https://starchild.gsfc.nasa.gov/docs/StarChild/solar_system_level1/earth_satellites.html",
+      "note": "地球平均半径 6,371 公里；空间站、GPS、同步轨道高度为常用近似值"
+    },
+    {
+      "label": "百元钞厚度约 0.1 毫米、读书量、token 与词的换算均为估算，假设已在各场景中注明"
+    }
+  ]
+};
+/* === TOSCALE CONFIG END === */
+</script>
+<script>
+/* 比例尺 to-scale engine v1 · MIT */
+(function(){
+  'use strict';
+  var C = window.TOSCALE || {};
+  var root = document.getElementById('ts-root');
+  var errors = [], updaters = [], resizers = [];
+  var reduce = !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+  function el(tag, cls, text){ var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = String(text); return e; }
+  function add(p){ for (var i = 1; i < arguments.length; i++){ if (arguments[i]) p.appendChild(arguments[i]); } return p; }
+  function num(n, d){ return Number(n).toLocaleString('zh-CN', {maximumFractionDigits: d == null ? 0 : d}); }
+  function trim(x, d){ return String(Number(x.toFixed(d))); }
+  function cn(n){ var a = Math.abs(n);
+    if (a >= 1e12) return trim(n / 1e12, 2) + ' 万亿';
+    if (a >= 1e8) return trim(n / 1e8, 2) + ' 亿';
+    if (a >= 1e4) return trim(n / 1e4, a >= 1e6 ? 0 : 1) + ' 万';
+    return num(n, a < 10 ? 1 : 0); }
+  function fmt(n){ return Math.abs(n) >= 1e8 ? cn(n) : num(n, Math.abs(n) < 10 ? 1 : 0); }
+  function nice(x){ if (!(x > 0)) return 1; var e = Math.pow(10, Math.floor(Math.log(x) / Math.LN10)); var f = x / e; return (f < 1.5 ? 1 : f < 3 ? 2 : f < 7 ? 5 : 10) * e; }
+  function pad2(i){ return (i < 10 ? '0' : '') + i; }
+  function absTop(node){ return node.getBoundingClientRect().top + (window.pageYOffset || document.documentElement.scrollTop); }
+  function go(y){ window.scrollTo({top: Math.max(0, y), behavior: reduce ? 'auto' : 'smooth'}); }
+  function section(tone, cls, id){ var s = el('section', 'ts-sec tone-' + (tone || 'paper') + (cls ? ' ' + cls : '')); if (id) s.id = id; return s; }
+  function inner(cls){ return el('div', 'in' + (cls ? ' ' + cls : '')); }
+  var MAX_PX = 8000000;
+
+  function hud(label, unit, buttons){
+    var h = el('div', 'hud'), i = inner();
+    var read = el('span', 'hud-read'), val = el('span', 'hud-val', '0'), sub = el('span', 'hud-sub');
+    add(read, el('span', 'hud-lab', label), val, el('span', 'hud-unit', unit || ''), sub);
+    var bar = el('span', 'hud-bar'), fill = el('i'); bar.appendChild(fill); bar.setAttribute('aria-hidden', 'true');
+    var btns = el('span', 'hud-btns');
+    (buttons || []).forEach(function(b){ var bt = el('button', null, b[0]); bt.type = 'button'; bt.addEventListener('click', b[1]); btns.appendChild(bt); });
+    add(i, read, bar, btns.childNodes.length ? btns : null); h.appendChild(i);
+    return {node: h, val: val, sub: sub, fill: fill};
+  }
+
+  function head(s, i, contract){
+    var h = inner('sc-head');
+    add(h, el('p', 'sc-no', pad2(i + 1) + (s.kicker ? ' · ' + s.kicker : '')),
+      s.title ? el('h2', null, s.title) : null,
+      s.lede ? el('p', 'sc-lede', s.lede) : null,
+      (s.contract !== false && (s.contract || contract)) ? el('p', 'contract', s.contract || contract) : null);
+    return h;
+  }
+  function punch(s){ if (!s.punch) return null; var p = inner('punch'); p.appendChild(el('p', null, s.punch)); return p; }
+
+  /* ---------- 标尺：一条真实比例的长路 ---------- */
+  function ruler(s, sec, i){
+    var per = +s.per, L = +s.length, unit = s.unit || '';
+    if (!(per > 0) || !(L > 0)) { errors.push('场景 ' + (i + 1) + '（ruler）需要 per > 0 且 length > 0'); return; }
+    var r1 = s.from && s.from.size ? s.from.size / per / 2 : 0;
+    var r2 = s.to && s.to.size ? s.to.size / per / 2 : 0;
+    var y0 = 110 + r1, y1 = y0 + L / per, H = y1 + r2 + 120;
+    if (H > MAX_PX) { errors.push('场景 ' + (i + 1) + '：长度 ' + num(H) + ' 像素，超过浏览器能稳定处理的 ' + num(MAX_PX) + ' 像素。把 per 调大。'); return; }
+    var track = el('div', 'rl'); track.style.height = Math.ceil(H) + 'px';
+    var axis = el('div', 'rl-axis'); axis.style.top = y0 + 'px'; axis.style.height = (y1 - y0) + 'px'; track.appendChild(axis);
+
+    var step = +s.tick || nice(L / 8);
+    for (var v = step; v < L - step * 0.3; v += step){ var t = el('div', 'rl-tick', num(v) + ' ' + unit); t.style.top = (y0 + v / per) + 'px'; t.setAttribute('aria-hidden', 'true'); track.appendChild(t); }
+
+    function body(b, cy, r, above){
+      var dia = 2 * r, shown = Math.max(dia, 2), d = el('div', 'rl-body'), c = b.color || '#9AA0AA';
+      d.style.width = d.style.height = shown + 'px'; d.style.top = (cy - shown / 2) + 'px';
+      d.style.background = b.flat ? c : 'radial-gradient(circle at 34% 30%, color-mix(in srgb, ' + c + ' 55%, #fff), ' + c + ' 52%, color-mix(in srgb, ' + c + ' 62%, #000))';
+      d.setAttribute('aria-hidden', 'true'); track.appendChild(d);
+      var n = el('div', 'rl-name' + (above ? ' above' : ''), b.name || '');
+      var meta = b.sub || (b.size ? '直径 ' + num(b.size) + ' ' + unit : '');
+      if (dia < 1) meta += '（实际不到 1 像素，放大画成 2 像素）';
+      if (meta) n.appendChild(el('small', null, meta));
+      n.style.top = (above ? cy - shown / 2 - 12 : cy + shown / 2 + 12) + 'px';
+      track.appendChild(n);
+    }
+    if (s.from) body(s.from, y0, r1, true);
+    if (s.to) body(s.to, y1, r2, false);
+    if (s.to && !s.to.sub){ var last = track.lastChild; var sm = last.querySelector('small'); if (sm) sm.textContent += ' · 距起点 ' + num(L) + ' ' + unit; }
+
+    (s.marks || []).forEach(function(m){
+      var at = m.alt != null ? (s.from && s.from.size ? s.from.size / 2 : 0) + (+m.alt) : +m.at;
+      if (!(at >= 0 && at <= L)) { errors.push('标记「' + (m.text || '') + '」的位置 ' + at + ' 不在 0–' + L + ' 之间'); return; }
+      var e = el('div', 'rl-mark'), sp = el('span', null, m.text || '');
+      sp.appendChild(el('b', null, m.sub || (num(at) + ' ' + unit)));
+      e.appendChild(sp); e.style.top = (y0 + at / per) + 'px'; track.appendChild(e);
+    });
+    (s.quips || []).forEach(function(q){
+      var e = el('div', 'rl-quip', q.text || ''); e.style.top = (y0 + (+q.at) / per) + 'px'; track.appendChild(e);
+    });
+
+    var hd = hud(s.readout || '距离起点', unit, [
+      ['回到起点', function(){ go(absTop(track) + y0 - innerHeight * 0.5); }],
+      ['直达终点', function(){ go(absTop(track) + y1 - innerHeight * 0.5); }]
+    ]);
+    add(sec, head(s, i, '1 像素 = ' + num(per, 6) + ' ' + unit), hd.node, track, punch(s));
+    updaters.push(function(){
+      var r = track.getBoundingClientRect(); if (r.bottom < -200 || r.top > innerHeight + 200) return;
+      var d = Math.min(L, Math.max(0, (innerHeight * 0.5 - r.top - y0) * per));
+      hd.val.textContent = fmt(d); hd.fill.style.width = (d / L * 100) + '%';
+      hd.sub.textContent = Math.round(d / L * 100) + '%';
+    });
+  }
+
+  /* ---------- 堆叠：几样东西按同一比例并排站好 ---------- */
+  function stack(s, sec, i){
+    var per = +s.per, unit = s.unit || '', items = s.items || [];
+    if (!(per > 0) || !items.length) { errors.push('场景 ' + (i + 1) + '（stack）需要 per > 0 和至少一个 items'); return; }
+    var max = Math.max.apply(null, items.map(function(x){ return +x.value || 0; }));
+    var Hb = max / per, capPad = 160, H = Hb + capPad;
+    if (H > MAX_PX) { errors.push('场景 ' + (i + 1) + '：高度 ' + num(H) + ' 像素，太高了，把 per 调大。'); return; }
+    var area = el('div', 'st-area'); area.style.height = Math.ceil(H) + 'px';
+    var step = +s.tick || nice(120 * per);
+    for (var v = 0; v <= max + 1e-9; v += step){ var t = el('div', 'st-tick'); t.style.top = (H - v / per) + 'px'; t.appendChild(el('span', null, num(v, 3) + ' ' + unit)); t.setAttribute('aria-hidden', 'true'); area.appendChild(t); }
+    var bars = el('div', 'st-bars');
+    items.forEach(function(it){
+      var h = (+it.value) / per, col = el('div', 'st-col'), bar = el('div', 'st-bar');
+      bar.style.height = Math.max(h, 1) + 'px'; bar.style.background = it.color || 'var(--fg)';
+      var every = +it.every;
+      if (every > 0) { var px = every / per; if (px >= 3) bar.style.backgroundImage = 'repeating-linear-gradient(to top, transparent 0 ' + (px - 1) + 'px, rgba(255,255,255,.32) ' + (px - 1) + 'px ' + px + 'px)'; }
+      var cap = el('div', 'st-cap'); cap.style.bottom = (Math.max(h, 1) + 10) + 'px';
+      add(cap, el('b', null, it.name || ''), el('i', null, num(+it.value, 3) + ' ' + unit), it.note ? el('small', null, it.note + (h < 1 ? '（不到 1 像素）' : '')) : (h < 1 ? el('small', null, '不到 1 像素') : null));
+      add(col, cap, bar); bars.appendChild(col);
+    });
+    area.appendChild(bars);
+    var wrap = inner(); add(wrap, area, el('div', 'st-ground'));
+    var hd = hud(s.readout || '离地', unit, [['到顶', function(){ go(absTop(area) + capPad - innerHeight * 0.3); }], ['到地面', function(){ go(absTop(area) + H - innerHeight * 0.6); }]]);
+    add(sec, head(s, i, '1 像素 = ' + num(per, 6) + ' ' + unit), hd.node, wrap, punch(s));
+    updaters.push(function(){
+      var r = area.getBoundingClientRect(); if (r.bottom < -200 || r.top > innerHeight + 200) return;
+      var hv = Math.min(max, Math.max(0, (r.top + H - innerHeight * 0.5) * per));
+      hd.val.textContent = fmt(hv); hd.fill.style.width = (hv / max * 100) + '%'; hd.sub.textContent = '';
+    });
+  }
+
+  /* ---------- 点阵：1 个点 = 固定数量，一个不少地画出来 ---------- */
+  function dots(s, sec, i){
+    var per = +s.per, groups = s.groups || [], uname = s.unitName || '';
+    if (!(per > 0) || !groups.length) { errors.push('场景 ' + (i + 1) + '（dots）需要 per > 0 和至少一个 groups'); return; }
+    var counts = groups.map(function(g){ var c = (+g.value) / per; return c > 0 ? Math.max(1, Math.round(c)) : 0; });
+    var total = counts.reduce(function(a, b){ return a + b; }, 0);
+    if (total > 2000000) { errors.push('场景 ' + (i + 1) + '：要画 ' + num(total) + ' 个点，超过 200 万。把 per 调大。'); return; }
+    var colors = groups.map(function(g, k){ return g.color || (k === 0 ? '#E4412B' : 'currentColor'); });
+    var legend = el('ul', 'dt-legend');
+    groups.forEach(function(g, k){
+      var li = el('li'), sw = el('i'); sw.style.background = colors[k];
+      var tx = el('div'); add(tx, el('b', null, g.label || ''), el('em', null, num(+g.value) + ' ' + uname + ' → ' + num(counts[k]) + ' 个点'));
+      var note = g.note || ''; if ((+g.value) / per < 0.5) note += (note ? '；' : '') + '不到 1 个点，按 1 个点画';
+      if (note) tx.appendChild(el('small', null, note));
+      add(li, sw, tx); legend.appendChild(li);
+    });
+    var grid = el('div', 'dt-grid');
+    var ci = s.callout == null ? 0 : s.callout;
+    var call = null, ring = null;
+    if (ci !== false && groups[ci]) {
+      call = el('div', 'dt-call', s.calloutText || ('↓ 圈里这 ' + num(counts[ci]) + ' 个点：' + groups[ci].label));
+      ring = el('div', 'dt-ring'); ring.setAttribute('aria-hidden', 'true'); add(grid, call, ring);
+    }
+    var wrap = inner(); add(wrap, legend, grid);
+    var size = +s.dot || 3, step = size + 1, meta = {cols: 1, rows: 1}, lastW = -1;
+    function draw(){
+      var W = Math.floor(grid.clientWidth); if (W === lastW || W <= 0) return; lastW = W;
+      Array.prototype.slice.call(grid.querySelectorAll('canvas')).forEach(function(c){ c.parentNode.removeChild(c); });
+      var cols = Math.max(1, Math.floor((W + 1) / step)), rows = Math.ceil(total / cols), tileRows = Math.max(1, Math.floor(1600 / step));
+      var bounds = [], acc = 0; counts.forEach(function(c){ acc += c; bounds.push(acc); });
+      var fg = getComputedStyle(sec).color;
+      for (var r0 = 0; r0 < rows; r0 += tileRows){
+        var nr = Math.min(tileRows, rows - r0), hc = nr * step, cv = document.createElement('canvas');
+        var dpr = Math.min(window.devicePixelRatio || 1, 2); if (W * hc * dpr * dpr > 8e6) dpr = Math.sqrt(8e6 / (W * hc));
+        cv.width = Math.round(W * dpr); cv.height = Math.round(hc * dpr); cv.style.width = W + 'px'; cv.style.height = hc + 'px';
+        cv.setAttribute('aria-hidden', 'true');
+        var ctx = cv.getContext('2d'); ctx.scale(dpr, dpr);
+        var start = r0 * cols, end = Math.min(total, (r0 + nr) * cols), g = 0;
+        while (g < bounds.length - 1 && start >= bounds[g]) g++;
+        ctx.fillStyle = colors[g] === 'currentColor' ? fg : colors[g];
+        for (var k = start; k < end; k++){
+          if (k >= bounds[g]) { while (g < bounds.length - 1 && k >= bounds[g]) g++; ctx.fillStyle = colors[g] === 'currentColor' ? fg : colors[g]; }
+          ctx.fillRect((k % cols) * step, (Math.floor(k / cols) - r0) * step, size, size);
+        }
+        grid.appendChild(cv);
+      }
+      meta = {cols: cols, rows: rows};
+      if (ring) {
+        var sIdx = ci === 0 ? 0 : bounds[ci - 1], eIdx = bounds[ci] - 1;
+        if (counts[ci] > 0 && counts[ci] <= 5000) {
+          var rA = Math.floor(sIdx / cols), rB = Math.floor(eIdx / cols);
+          var cA = rA === rB ? sIdx % cols : 0, cB = rA === rB ? eIdx % cols : cols - 1, pd = 7;
+          ring.style.left = (cA * step - pd) + 'px'; ring.style.top = (rA * step - pd) + 'px';
+          ring.style.width = ((cB - cA) * step + size + 2 * pd) + 'px'; ring.style.height = ((rB - rA) * step + size + 2 * pd) + 'px';
+          ring.hidden = false;
+          call.style.left = Math.max(0, Math.min(cA * step - pd, W - 260)) + 'px'; call.style.top = (rA * step - pd - 6) + 'px';
+        } else { ring.hidden = true; }
+      }
+    }
+    var hd = hud('已经看过', '个点', [['跳到最后', function(){ go(absTop(grid) + grid.offsetHeight - innerHeight * 0.6); }]]);
+    add(sec, head(s, i, '1 个点 = ' + num(per) + ' ' + uname), hd.node, wrap, punch(s));
+    resizers.push(draw);
+    updaters.push(function(){
+      var r = grid.getBoundingClientRect(); if (r.bottom < -200 || r.top > innerHeight + 200) return;
+      var rowsSeen = Math.min(meta.rows, Math.max(0, (innerHeight * 0.55 - r.top) / step));
+      var seen = Math.min(total, Math.round(rowsSeen * meta.cols));
+      hd.val.textContent = num(seen); hd.sub.textContent = '≈ ' + cn(seen * per) + ' ' + uname;
+      hd.fill.style.width = (seen / total * 100) + '%';
+    });
+  }
+
+  /* ---------- 计数器：从打开页面那一刻开始累计 ---------- */
+  function ticker(s, sec, i){
+    var rate = +s.rate, unit = s.unit || '';
+    if (!(rate > 0)) { errors.push('场景 ' + (i + 1) + '（ticker）需要 rate > 0'); return; }
+    var w = inner('tk'), n = el('p', 'tk-num', '0'), meta = el('p', 'tk-meta');
+    add(w, el('p', 'sc-no', pad2(i + 1) + (s.kicker ? ' · ' + s.kicker : '')), el('p', 'tk-pre', s.title || ''), n, s.suffix ? el('p', 'tk-suf', s.suffix) : null, meta, s.note ? el('p', 'sc-lede', s.note) : null);
+    sec.appendChild(w);
+    var t0 = performance.now(), last = -1e9;
+    function frame(now){
+      if (!reduce || now - last > 500){ var secs = (now - t0) / 1000; n.textContent = num(Math.floor(secs * rate)); meta.textContent = '已过去 ' + num(secs, 0) + ' 秒 · 每秒约 ' + num(rate) + ' ' + unit; last = now; }
+      requestAnimationFrame(frame);
+    }
+    meta.textContent = '每秒约 ' + num(rate) + ' ' + unit;
+    requestAnimationFrame(frame);
+  }
+
+  var R = {ruler: ruler, stack: stack, dots: dots, ticker: ticker};
+  document.title = C.title || '比例尺';
+  var scenes = C.scenes || [];
+
+  var intro = section(C.tone || 'tape', 'ts-intro'), ii = inner();
+  add(ii, el('p', 'kicker', C.kicker || '比例尺 · to-scale'), el('h1', null, C.title || '比例尺'), C.lede ? el('p', 'lede', C.lede) : null);
+  if (scenes.length > 1){
+    var toc = el('ul', 'toc');
+    scenes.forEach(function(s, k){ var li = el('li'), a = el('a'); a.href = '#s' + (k + 1); add(a, el('span', null, pad2(k + 1)), document.createTextNode(s.title || s.type)); li.appendChild(a); toc.appendChild(li); });
+    ii.appendChild(toc);
+  }
+  add(intro, ii, el('div', 'tape'));
+  root.appendChild(intro);
+
+  scenes.forEach(function(s, k){
+    var sec = section(s.tone || (k % 2 ? 'paper' : 'ink'), 'ts-scene ts-' + s.type, 's' + (k + 1));
+    if (!R[s.type]) { errors.push('场景 ' + (k + 1) + '：不认识的类型「' + s.type + '」，可用 ruler / stack / dots / ticker'); return; }
+    try { R[s.type](s, sec, k); } catch (e) { errors.push('场景 ' + (k + 1) + ' 渲染出错：' + e.message); }
+    root.appendChild(sec);
+  });
+
+  var end = section(C.endTone || 'ink', 'ts-end'), ei = inner(), E = C.ending || {};
+  var card = el('div', 'end-card');
+  add(card, el('p', 'kicker', E.kicker || C.kicker || '比例尺'), el('p', 'end-big', E.big || C.title || ''), E.text ? el('p', 'end-text', E.text) : null, el('div', 'tape'));
+  var src = el('div', 'src');
+  if ((C.sources || []).length){
+    src.appendChild(el('h3', null, '数据来源'));
+    var ol = el('ol');
+    C.sources.forEach(function(x){ var li = el('li'); if (x.url){ var a = el('a', null, x.label || x.url); a.href = x.url; a.target = '_blank'; a.rel = 'noopener'; li.appendChild(a); } else li.appendChild(document.createTextNode(x.label || '')); if (x.note) li.appendChild(el('small', null, x.note)); ol.appendChild(li); });
+    src.appendChild(ol);
+  }
+  if (C.credit !== false) src.appendChild(el('p', 'credit', C.credit || '用「比例尺 to-scale」制作 · 开源 Claude Skill'));
+  add(ei, card, src); end.appendChild(ei); root.appendChild(end);
+
+  if (errors.length){ var box = el('div', 'ts-err', '比例尺配置有问题：\n· ' + errors.join('\n· ')); root.insertBefore(box, root.firstChild); if (window.console) console.error(box.textContent); }
+
+  var pending = false;
+  function onScroll(){ if (pending) return; pending = true; requestAnimationFrame(function(){ pending = false; updaters.forEach(function(f){ f(); }); }); }
+  var rt; function onResize(){ clearTimeout(rt); rt = setTimeout(function(){ resizers.forEach(function(f){ f(); }); onScroll(); }, 150); }
+  resizers.forEach(function(f){ f(); });
+  window.addEventListener('scroll', onScroll, {passive: true});
+  window.addEventListener('resize', onResize);
+  onScroll();
+})();
+</script>
+<!-- TS:FRAGMENT-END -->
+</body>
+</html>
